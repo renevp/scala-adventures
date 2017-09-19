@@ -10,12 +10,11 @@ resolvers ++= Seq(
   "gphat" at "https://raw.github.com/gphat/mvn-repo/master/releases/")
 
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.3"
 sbtVersion := "0.13.13"
 
-
-val specs2Version = "3.8.6"
-val circeVersion = "0.7.0"
+val specs2Version = "3.9.5"
+val circeVersion = "0.8.0"
 
 libraryDependencies ++= Seq(
   "io.circe"                        %% "circe-core"                  % circeVersion,
@@ -27,6 +26,9 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions in Test ++= Seq("-Yrangepos")
+
+testFrameworks := Seq(TestFrameworks.Specs2)
+
 
 // Read here for optional dependencies:
 // http://etorreborre.github.io/specs2/guide/org.specs2.guide.Runners.html#Dependencies

@@ -72,7 +72,7 @@ object CirceEncodingExercises {
     * Exercise 6
     *
     *
-    * Rewrite agent encoding to also encode the agentid if it exists.
+    * Rewrite agent encoding to also encode the `agentid` field if agentid exists.
     * For now, create a List of tuples, only adding the agentid tuple to the list if it is required.
     *
     */
@@ -87,7 +87,7 @@ object CirceEncodingExercises {
 
     val optionalFields: List[(String, Json)] = ???
 
-    Json.obj( ??? ).noSpaces
+    Json.obj( ??? ).noSpaces // Find a better more convenient way to produce a Json from a List
 
   }
 
@@ -95,7 +95,7 @@ object CirceEncodingExercises {
 
   /**
     * Option 2
-    * Use a custom Printer, in place of no spaces to strip out optional values when you are converting from Json to a string
+    * Use a custom Printer, in place of `noSpaces` to strip out optional values when you are converting from Json to a string
     *  val printer = Printer.noSpaces.copy(dropNullKeys = true)
     *
     *
@@ -125,14 +125,14 @@ object CirceEncodingExercises {
 
   case class Property(description: String, agent: Agent)
 
+
+
   /**
     * Write out an encoder that just uses the syntax from Exercise 5,
     * and a simple encode Agent method.
     */
-
-
-
   def writeProperty(property: Property): String = {
+
     def encodeAgent(agent: Agent): Json = ???
 
     Json.obj(
@@ -164,12 +164,14 @@ object CirceEncodingExercises {
     */
 
   def writePropertyWithEncoder(property: Property): String = {
+
     def encodeAgent(agent: Agent): Json = ???
 
     /**
       * Note: since scala 2.11, a Single Abstract Method trait instance can be automatically created from a function
       * that matches the abstract method's signature.  So the below line can be further simplified to:
       * implicit def AgentEncoder: Encoder[Agent] = encodeAgent
+      *
       */
     implicit def AgentEncoder: Encoder[Agent] = ???
 
@@ -177,8 +179,25 @@ object CirceEncodingExercises {
       "description" -> property.description.asJson,
       "agent" -> ???
     ).noSpaces
-    ???
   }
 
+  /**
+    * There are other ways to make encoder code simpler, specially for simple data types.
+    * Explore
+    */
+  def writePropertyWithEncoder2(property: Property): String = {
 
+    implicit def AgentEncoder: Encoder[Agent] =
+      Encoder.forProduct3("surname", "firstNames", "principal")(agent => ???)
+
+    val propertyEncoder: Encoder[Property] = ???
+
+    propertyEncoder.apply(property).noSpaces
+  }
+
+  /**
+    * Think about what you have learnt about Encoders so far. In what other ways could you implement an Encoder[Agent]?
+    *
+    * Hint: what options you have to extend a trait?
+    */
 }

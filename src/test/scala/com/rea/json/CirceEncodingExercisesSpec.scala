@@ -6,7 +6,7 @@ import org.specs2.mutable.Specification
 
 class CirceEncodingExercisesSpec extends Specification with JsonMatchers {
 
-  "ArgonautExcercises" should {
+  "CirceEncodingExercises" should {
     "Exercise 1 prints a string" in {
       writeJsonString("yup, json string") must beEqualTo(""""yup, json string"""")
     }
@@ -102,8 +102,30 @@ class CirceEncodingExercisesSpec extends Specification with JsonMatchers {
         }
 
       }
+    }
 
+    "Exercise 11 encodes again a property" should {
 
+      val agent = Agent("Kane", List("John", "Michael"), principal = true)
+      val property = Property("a great house in Paris", agent)
+
+      def propertyJson = writePropertyWithEncoder2(property)
+
+      "with description" in {
+        propertyJson must /("description" -> "a great house in Paris")
+      }
+
+      "with agent" in {
+        "with surname" in {
+          propertyJson must /("agent") / ("surname" -> agent.surname)
+        }
+        "with principal" in {
+          propertyJson must /("agent") / ("principal" -> agent.principal)
+        }
+        "with firstNames" in {
+          propertyJson must (/("agent") / ("firstNames")).andHave(exactly(agent.firstNames: _*))
+        }
+      }
     }
 
   }

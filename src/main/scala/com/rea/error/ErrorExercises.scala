@@ -49,7 +49,10 @@ object ErrorExercises {
     2 -> Agent(2, "Ellis Jones")
   )
 
-  def findAgent(agentId: AgentId): ErrorOr[Agent] = ???
+  def findAgent(agentId: AgentId): ErrorOr[Agent] = agents.get(agentId) match {
+    case Some(agent) => Right(agent)
+    case None => Left(AppError(s"agent $agentId not found"))
+  }
 
   /**
     * Exercise 2:
@@ -61,7 +64,8 @@ object ErrorExercises {
     *  def map[B](g: A => B): ErrorOr[B]
     */
 
-  def findAgentAnswer(agentId: AgentId) : ErrorOr[String] = ???
+  def findAgentAnswer(agentId: AgentId) : ErrorOr[String] = 
+    findAgent(agentId).map(agent => s"The agent is ${agent.name}")
 
   /**
     * Exercise 3:
@@ -81,7 +85,10 @@ object ErrorExercises {
     17 -> Property(17, "A dream house from a non existant agent", 0)
   )
 
-  def findProperty(propertyId: PropertyId) : ErrorOr[Property] = ???
+  def findProperty(propertyId: PropertyId) : ErrorOr[Property] = properties.get(propertyId) match {
+    case Some(property) => Right(property)
+    case None => Left(AppError(s"property ${propertyId} not found"))
+  }
 
   /**
     * Then we can find the agent from the property id.
@@ -89,7 +96,8 @@ object ErrorExercises {
     * HINT: Because ErrorOr is a monad, it has a flatMap method:
     * def flatMap[B](g: A => ErrorOr[B]): ErrorOr[B]
     */
-  def findPropertyAgent(propertyId: PropertyId) : ErrorOr[Agent] = ???
+  def findPropertyAgent(propertyId: PropertyId) : ErrorOr[Agent] =
+    findProperty(propertyId).flatMap( property => findAgent(property.agentId))
 
   /**
     * Exercise 4:
@@ -97,8 +105,8 @@ object ErrorExercises {
     * Lets look up a list of agent ids.
     * We want to get either a Vector[ErrorOr[String]]
     */
-  def findAgents(agentIds: Vector[AgentId]): Vector[ErrorOr[Agent]] = ???
-
+  def findAgents(agentIds: Vector[AgentId]): Vector[ErrorOr[Agent]] =
+    agentIds.map(agentId => findAgent(agentId))
 
   /**
     * Exercise 5:
@@ -112,8 +120,8 @@ object ErrorExercises {
     *
     * def sequence[F[_]]: F[Vector[A]]
     */
-  def sequenceAgents(agentIds: Vector[ErrorOr[Agent]]): ErrorOr[Vector[Agent]] = ???
-
+  def sequenceAgents(agentIds: Vector[ErrorOr[Agent]]): ErrorOr[Vector[Agent]] =
+    agentIds.sequence[ErrorOr, Agent]
 
   /**
     * Exercise 6:
@@ -129,7 +137,8 @@ object ErrorExercises {
     * def traverse[F[_]](f: A => F[B]): F[Vector[B]]
     */
 
-  def findAllAgents(agentIds: Vector[AgentId]): ErrorOr[Vector[Agent]] = ???
+  def findAllAgents(agentIds: Vector[AgentId]): ErrorOr[Vector[Agent]] =
+    agentIds.traverse[ErrorOr, Agent](findAgent)
 
   /** Exercise 7:
     *
@@ -141,14 +150,21 @@ object ErrorExercises {
     * indicating that the results are thrown away.
     */
 
-  def checkAllAgents(agentIds: Vector[AgentId]): ErrorOr[Unit] = ???
+  def checkAllAgents(agentIds: Vector[AgentId]): ErrorOr[Unit] =
+    agentIds.traverseU_(findAgent): ErrorOr[Unit]
 
   /** Exercise 8:
     *
     * Let look up a list of agent ids.
     * This time we either want an error if one doesn't exist or a list of the agents' names.
     */
-  def findAllAgentsNames(agentIds: Vector[AgentId]): ErrorOr[Vector[String]] = ???
+  def findAllAgentsNames(agentIds: Vector[AgentId]): ErrorOr[Vector[String]] = {
+
+    def findAgentName(agentId: AgentId): ErrorOr[String] =
+      findAgent(agentId).map(agent => agent.name)
+
+    agentIds.traverse[ErrorOr, String](findAgentName)
+  }
   /**
     * Exercise 9:
     *
@@ -158,7 +174,8 @@ object ErrorExercises {
     * HINT: Consider cats method ".separate", which among other things, can squeeze an F[Xor[A,B]] into an (F[A], F[B]).
     */
 
-  def findSomeAgents(agentIds: Vector[AgentId]): (Vector[AppError], Vector[Agent]) = ???
+  def findSomeAgents(agentIds: Vector[AgentId]): (Vector[AppError], Vector[Agent]) =
+    findAgents(agentIds).separate
 
   /**
     * Exercise 10:
@@ -168,7 +185,13 @@ object ErrorExercises {
     *
     * HINT: use a for comprehension.
     */
-  def suggestAProperty(propertyId: PropertyId, agentId: AgentId): ErrorOr[String] = ???
+  def suggestAProperty(propertyId: PropertyId, agentId: AgentId): ErrorOr[String] = {
+    for {
+      agent <- findAgent(agentId)
+      property <- findProperty(propertyId)
+      suggestion <- Right(s"Hey ${agent.name} how about selling ${property.description}")
+    } yield suggestion
+  }
 
   /**
     * Exercise 11:
@@ -194,7 +217,12 @@ object ErrorExercises {
     * Try rewriting the suggestAProperty method above using an Apply[ErrorOr].mapXXX variant.
     */
 
-  def suggestAProperty2(propertyId: PropertyId, agentId: AgentId): ErrorOr[String] = ???
+  def suggestAProperty2(propertyId: PropertyId, agentId: AgentId): ErrorOr[String] = {
+    def makeSuggestion(agent: Agent, property: Property): String =
+      s"Hey ${agent.name} how about selling ${property.description}"
+
+    Apply[ErrorOr].map2(findAgent(agentId),findProperty(propertyId))(makeSuggestion)
+  }
 
 
 }

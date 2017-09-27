@@ -126,7 +126,23 @@ object CirceEncodingExercises {
 
   val printer = Printer.noSpaces.copy(dropNullKeys = true)
 
-  def writeAgent5(agent: Agent): String = ???
+  def writeAgent5(agent: Agent): String = {
+
+    val mandatoryFields: List[(String, Json)] = List(
+      "surname" -> agent.surname.asJson,
+      "firstNames" -> agent.firstNames.asJson,
+      "principal" -> agent.principal.asJson
+    )
+
+    val optionalFields: List[(String, Json)] = agent.agentId match {
+      case None => List()
+      case Some(agentId) => List("agentid" -> agentId.asJson)
+    }
+
+    val fields = mandatoryFields ++ optionalFields
+
+    printer.pretty(Json.fromFields(fields))
+  }
 
 
   /**
@@ -151,11 +167,28 @@ object CirceEncodingExercises {
     */
   def writeProperty(property: Property): String = {
 
-    def encodeAgent(agent: Agent): Json = ???
+    def encodeAgent(agent: Agent): Json = {
+      val mandatoryFields: List[(String, Json)] = List(
+        "surname" -> agent.surname.asJson,
+        "firstNames" -> agent.firstNames.asJson,
+        "principal" -> agent.principal.asJson
+      )
+
+      val optionalFields: List[(String, Json)] = agent.agentId match {
+        case None => List()
+        case Some(agentId) => List("agentid" -> agentId.asJson)
+      }
+
+      val fields = mandatoryFields ++ optionalFields
+
+      Json.fromFields(fields)
+    }
+
+    println(encodeAgent(property.agent))
 
     Json.obj(
       "description" -> property.description.asJson,
-      "agent" -> ???
+      "agent" -> encodeAgent(property.agent)
     ).noSpaces
   }
 
@@ -183,7 +216,22 @@ object CirceEncodingExercises {
 
   def writePropertyWithEncoder(property: Property): String = {
 
-    def encodeAgent(agent: Agent): Json = ???
+    def encodeAgent(agent: Agent): Json = {
+      val mandatoryFields: List[(String, Json)] = List(
+        "surname" -> agent.surname.asJson,
+        "firstNames" -> agent.firstNames.asJson,
+        "principal" -> agent.principal.asJson
+      )
+
+      val optionalFields: List[(String, Json)] = agent.agentId match {
+        case None => List()
+        case Some(agentId) => List("agentid" -> agentId.asJson)
+      }
+
+      val fields = mandatoryFields ++ optionalFields
+
+      Json.fromFields(fields)
+    }
 
     /**
       * Note: since scala 2.11, a Single Abstract Method trait instance can be automatically created from a function
@@ -191,11 +239,11 @@ object CirceEncodingExercises {
       * implicit def AgentEncoder: Encoder[Agent] = encodeAgent
       *
       */
-    implicit def AgentEncoder: Encoder[Agent] = ???
+    implicit def AgentEncoder: Encoder[Agent] = encodeAgent
 
     Json.obj(
       "description" -> property.description.asJson,
-      "agent" -> ???
+      "agent" -> property.agent.asJson
     ).noSpaces
   }
 
@@ -206,9 +254,10 @@ object CirceEncodingExercises {
   def writePropertyWithEncoder2(property: Property): String = {
 
     implicit def AgentEncoder: Encoder[Agent] =
-      Encoder.forProduct3("surname", "firstNames", "principal")(agent => ???)
+      Encoder.forProduct3("surname", "firstNames", "principal")(agent => (agent.surname, agent.firstNames, agent.principal))
 
-    val propertyEncoder: Encoder[Property] = ???
+    val propertyEncoder: Encoder[Property] =
+      Encoder.forProduct2("description", "agent")(property => (property.description, property.agent))
 
     propertyEncoder.apply(property).noSpaces
   }

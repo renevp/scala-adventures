@@ -40,7 +40,8 @@ object CirceDecodeExercises {
     *
     */
 
-  def parseToJson(myJsonString: String): Either[ParsingFailure, Json] = ???
+  def parseToJson(myJsonString: String): Either[ParsingFailure, Json] =
+    parser.parse(myJsonString)
 
   /**
     * Thats the first stage of : jsonString --(parse)--> Json --(decode)--> myObject
@@ -60,15 +61,19 @@ object CirceDecodeExercises {
     * Investigate what the method does when the json is not a JString
     */
 
-  def parseToString(myJsonString: String): Option[String] = ???
+  def parseToString(myJsonString: String): Option[String] =
+    parseToJson(myJsonString).fold(_ => None, json => json.asString)
 
   /**
     * Exercise 1.3
-    * If the parsed value is an object, retun the key-value map
+    * If the parsed value is an object, return the key-value map
     * Hint: you will need the Json.asObject method and the JsonObject.toMap.
     */
 
-  def parseToMap(myJsonObject: String) : Option[Map[String, Json]] = ???
+  def parseToMap(myJsonObject: String) : Option[Map[String, Json]] = parseToJson(myJsonObject) match {
+    case Left(_) => None
+    case Right(json) => json.asObject.map(jsonObject => jsonObject.toMap)
+  }
 
   /** Exercise 1.4
     * Building on the parseToMap method we just wrote,
@@ -85,7 +90,14 @@ object CirceDecodeExercises {
     *
     */
 
-  def parseDescription(propertyJson: String) : Option[String] = ???
+  def parseDescription(propertyJson: String) : Option[String] ={
+    val description = parseToMap(propertyJson).get("description")
+    description.asString match {
+      case None => None
+      case Some(value) => Some(value)
+    }
+  }
+
 
   /**
     * That's the end of part 1.
@@ -151,7 +163,8 @@ object CirceDecodeExercises {
     * For now return an Option[Json] to handle the case where it doesn't exist.
     */
 
-  def fetchDescription(propertyJson: Json): Option[Json] = ???
+  def fetchDescription(propertyJson: Json): Option[Json] =
+    propertyJson.asObject.get("description")
 
 
   /** Exercise 2.2
@@ -160,7 +173,15 @@ object CirceDecodeExercises {
     * error message in a string if we fail.
     */
 
-  def fetchAgentSurname(propertyJson: Json): Either[String, Json] = ???
+  def fetchAgentSurname(propertyJson: Json): Either[String, Json] = {
+    val agent = propertyJson.asObject.get("agent").get
+    val surname = agent.asObject.get("surname")
+    surname match {
+      case None => Left("not surname")
+      case Some(surname) => Right(surname)
+    }
+  }
+
 
   /**
     * Look again at exercise 2.2
@@ -208,7 +229,9 @@ object CirceDecodeExercises {
     * Explore the Cursor and DecodingFailure methods to see how to include the history.
     */
 
-    def cursorResult(cursor: ACursor): Decoder.Result[String] = ???
+    def cursorResult(cursor: ACursor): Decoder.Result[String] = {
+      cursor.as
+    }
 
 
 

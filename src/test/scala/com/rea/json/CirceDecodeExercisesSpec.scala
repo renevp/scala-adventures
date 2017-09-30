@@ -146,7 +146,7 @@ class CirceDecodeExercisesSpec extends Specification {
 
     "Exercise 3.1" should {
 
-      "return a DecoderFalure when passed a failed cursor" in {
+      "return a DecoderFailure when passed a failed cursor" in {
         withPropertyJson { json =>
           val failedCursor = json.hcursor.downField("Not a field")
           cursorResult(failedCursor).left.map(_.message) must beLeft("oopsie")

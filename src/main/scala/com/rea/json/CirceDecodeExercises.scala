@@ -174,7 +174,7 @@ object CirceDecodeExercises {
     */
 
   def fetchAgentSurname(propertyJson: Json): Either[String, Json] = {
-    val agent = propertyJson.asObject.get("agent").get
+    val agent   = propertyJson.asObject.get("agent").get
     val surname = agent.asObject.get("surname")
     surname match {
       case None => Left("not surname")
@@ -230,12 +230,11 @@ object CirceDecodeExercises {
     */
 
     def cursorResult(cursor: ACursor): Decoder.Result[String] = {
-      cursor.as
+      if(cursor.failed)
+        Left(DecodingFailure("oopsie", cursor.history))
+      else
+        Right("Woo hoo")
     }
-
-
-
-
 
   /**
     * Part 4.  Pulling it all together into decoders.
@@ -267,9 +266,8 @@ object CirceDecodeExercises {
     * given type
     */
 
-  def fetchAgentSurname2(propertyJson: Json): Decoder.Result[String] = ???
-
-
+  def fetchAgentSurname2(propertyJson: Json): Decoder.Result[String] =
+    propertyJson.hcursor.downField("agent").downField("surname").as
 
   /** Exercise 4.2 Fetching multiple values
     * What if we want to fetch multiple values from the same cursor.
@@ -298,7 +296,11 @@ object CirceDecodeExercises {
   case class Agent(surname: String, firstNames: List[String], principal: Boolean, agentId: Option[String] = None)
 
 
-  def decodeAgent(cursor: ACursor): Decoder.Result[Agent] = ???
+  def decodeAgent(cursor: ACursor): Decoder.Result[Agent] = for {
+    surname    <- cursor.get[String]("surname")
+    firstNames <- cursor.get[List[String]]("firstNames")
+    principal  <- cursor.get[Boolean]("principal")
+  } yield Agent(surname, firstNames, principal)
 
 
   /**
@@ -324,9 +326,13 @@ object CirceDecodeExercises {
   case class Property(description: String, agent: Agent)
 
 
-  implicit def agentDecoder: Decoder[Agent] = ???
+  implicit def agentDecoder: Decoder[Agent] = decodeAgent
 
-  def decodeProperty(cursor: HCursor): Decoder.Result[Property] = ???
+
+  def decodeProperty(cursor: HCursor): Decoder.Result[Property] = for {
+    description <- cursor.get[String]("description")
+    agent       <- cursor.get[Agent]("agent")
+  } yield Property(description, agent)
 
   /**
     * Exercise 4.4 - Adapting decoders

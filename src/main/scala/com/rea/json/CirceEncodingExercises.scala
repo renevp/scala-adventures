@@ -45,9 +45,9 @@ object CirceEncodingExercises {
 
   def writeAgent(agent: Agent): String = {
     Json.obj(
-      ("surname", agent.surname.asJson),
+      ("surname",    agent.surname.asJson),
       ("firstNames", agent.firstNames.asJson),
-      ("principal", agent.principal.asJson)
+      ("principal",  agent.principal.asJson)
       ).noSpaces
   }
 
@@ -70,9 +70,9 @@ object CirceEncodingExercises {
     */
   def writeAgent2(agent: Agent): String = {
     Json.obj(
-      "surname" -> agent.surname.asJson,
+      "surname"    -> agent.surname.asJson,
       "firstNames" -> agent.firstNames.asJson,
-      "principal" -> agent.principal.asJson
+      "principal"  -> agent.principal.asJson
     ).noSpaces
   }
 
@@ -93,9 +93,9 @@ object CirceEncodingExercises {
   def writeAgent3(agent: Agent): String = {
 
     val mandatoryFields: List[(String, Json)] = List(
-      "surname" -> agent.surname.asJson,
+      "surname"    -> agent.surname.asJson,
       "firstNames" -> agent.firstNames.asJson,
-      "principal" -> agent.principal.asJson
+      "principal"  -> agent.principal.asJson
     )
 
     val optionalFields: List[(String, Json)] = agent.agentId match {
@@ -129,9 +129,9 @@ object CirceEncodingExercises {
   def writeAgent5(agent: Agent): String = {
 
     val mandatoryFields: List[(String, Json)] = List(
-      "surname" -> agent.surname.asJson,
+      "surname"    -> agent.surname.asJson,
       "firstNames" -> agent.firstNames.asJson,
-      "principal" -> agent.principal.asJson
+      "principal"  -> agent.principal.asJson
     )
 
     val optionalFields: List[(String, Json)] = agent.agentId match {
@@ -169,9 +169,9 @@ object CirceEncodingExercises {
 
     def encodeAgent(agent: Agent): Json = {
       val mandatoryFields: List[(String, Json)] = List(
-        "surname" -> agent.surname.asJson,
+        "surname"    -> agent.surname.asJson,
         "firstNames" -> agent.firstNames.asJson,
-        "principal" -> agent.principal.asJson
+        "principal"  -> agent.principal.asJson
       )
 
       val optionalFields: List[(String, Json)] = agent.agentId match {
@@ -188,7 +188,7 @@ object CirceEncodingExercises {
 
     Json.obj(
       "description" -> property.description.asJson,
-      "agent" -> encodeAgent(property.agent)
+      "agent"       -> encodeAgent(property.agent)
     ).noSpaces
   }
 
@@ -218,9 +218,9 @@ object CirceEncodingExercises {
 
     def encodeAgent(agent: Agent): Json = {
       val mandatoryFields: List[(String, Json)] = List(
-        "surname" -> agent.surname.asJson,
+        "surname"    -> agent.surname.asJson,
         "firstNames" -> agent.firstNames.asJson,
-        "principal" -> agent.principal.asJson
+        "principal"  -> agent.principal.asJson
       )
 
       val optionalFields: List[(String, Json)] = agent.agentId match {
@@ -243,7 +243,7 @@ object CirceEncodingExercises {
 
     Json.obj(
       "description" -> property.description.asJson,
-      "agent" -> property.agent.asJson
+      "agent"       -> property.agent.asJson
     ).noSpaces
   }
 

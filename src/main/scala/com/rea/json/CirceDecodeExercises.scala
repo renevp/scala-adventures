@@ -72,7 +72,7 @@ object CirceDecodeExercises {
 
   def parseToMap(myJsonObject: String) : Option[Map[String, Json]] = parseToJson(myJsonObject) match {
     case Left(_) => None
-    case Right(json) => json.asObject.map(jsonObject => jsonObject.toMap)
+    case Right(json) => json.asObject.map(_.toMap)
   }
 
   /** Exercise 1.4
@@ -90,13 +90,11 @@ object CirceDecodeExercises {
     *
     */
 
-  def parseDescription(propertyJson: String) : Option[String] ={
-    val description = parseToMap(propertyJson).get("description")
-    description.asString match {
-      case None => None
-      case Some(value) => Some(value)
-    }
-  }
+  def parseDescription(propertyJson: String) : Option[String] = for {
+    map <- parseToMap(propertyJson)
+    jsonDescription <- map.get("description")
+    description <- jsonDescription.asString
+  } yield description
 
 
   /**
@@ -164,7 +162,7 @@ object CirceDecodeExercises {
     */
 
   def fetchDescription(propertyJson: Json): Option[Json] =
-    propertyJson.asObject.get("description")
+    propertyJson.hcursor.downField("description").focus
 
 
   /** Exercise 2.2
@@ -174,11 +172,10 @@ object CirceDecodeExercises {
     */
 
   def fetchAgentSurname(propertyJson: Json): Either[String, Json] = {
-    val agent   = propertyJson.asObject.get("agent").get
-    val surname = agent.asObject.get("surname")
-    surname match {
-      case None => Left("not surname")
+    val maybeSurName = propertyJson.hcursor.downField("agent").downField("surname")
+    maybeSurName.focus match {
       case Some(surname) => Right(surname)
+      case None => Left(s"Error parsing agents surname from ${propertyJson.asString}")
     }
   }
 
@@ -230,10 +227,7 @@ object CirceDecodeExercises {
     */
 
     def cursorResult(cursor: ACursor): Decoder.Result[String] = {
-      if(cursor.failed)
-        Left(DecodingFailure("oopsie", cursor.history))
-      else
-        Right("Woo hoo")
+      if(cursor.failed) Left(DecodingFailure("oopsie", cursor.history)) else Right("Woo hoo")
     }
 
   /**
@@ -267,7 +261,7 @@ object CirceDecodeExercises {
     */
 
   def fetchAgentSurname2(propertyJson: Json): Decoder.Result[String] =
-    propertyJson.hcursor.downField("agent").downField("surname").as
+    propertyJson.hcursor.downField("agent").downField("surname").as[String]
 
   /** Exercise 4.2 Fetching multiple values
     * What if we want to fetch multiple values from the same cursor.
@@ -352,20 +346,20 @@ object CirceDecodeExercises {
 
 
   def decodeAgent2(cursor: HCursor): Decoder.Result[Agent2] = {
-    implicit val surnameDecoder: Decoder[Surname] = ???
+    implicit val surnameDecoder: Decoder[Surname] = Decoder[String].map(Surname)
 //    advanced: see if you can rewrite the above using implicitly to find the string decoder for you.
 
     for {
-      surname <- cursor.get[Surname]("surname")
+      surname    <- cursor.get[Surname]("surname")
       firstNames <- cursor.get[List[String]]("firstNames")
-      principal <- cursor.get[Boolean]("principal")
+      principal  <- cursor.get[Boolean]("principal")
     } yield Agent2(surname, firstNames, principal)
   }
 
 
   /**
     * Exercise 4.5 - Adapting decoders with errors
-    * We are suddently very exclusive ... we are only expecting
+    * We are suddenly very exclusive ... we are only expecting
     * Agents that are principles.
     *
     * Adapt our agentDecoder to fail if the agent isn't a principal,
@@ -377,7 +371,12 @@ object CirceDecodeExercises {
     case class PrincipalAgent(surname: String)
 
     def decodePrincipalAgent(agentJson: Json): Decoder.Result[PrincipalAgent] = {
-      val principalsOnlyDecoder: Decoder[PrincipalAgent] = ???
+      val principalsOnlyDecoder: Decoder[PrincipalAgent] = agentDecoder.emap { agent =>
+        if (agent.principal)
+          Right(PrincipalAgent(agent.surname))
+        else
+          Left("not a principal agent")
+      }
 
       principalsOnlyDecoder.decodeJson(agentJson)
     }
@@ -401,8 +400,9 @@ object CirceDecodeExercises {
 
 
   def decodePropertyWithAgencyJson(propertyJson: Json): Decoder.Result[PropertyWithAgentJson] = {
-    val cursor: HCursor = ???
-    def getAgencyJson(cursor: HCursor): Decoder.Result[String] = ???
+    val cursor: HCursor = propertyJson.hcursor
+    def getAgencyJson(cursor: HCursor): Decoder.Result[String] =
+      cursor.get[Json]("agent").map(_.noSpaces)
 
     for {
       description <- cursor.get[String]("description")

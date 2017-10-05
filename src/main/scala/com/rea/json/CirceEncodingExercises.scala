@@ -20,7 +20,7 @@ object CirceEncodingExercises {
     *
     */
 
-  def writeJsonString(value: String): String = value.asJson.noSpaces
+  def writeJsonString(value: String): String = Json.fromString(value).noSpaces
 
   /** Exercise 2
     * Encode a simple boolean  Hint: use Json.fromBoolean method.
@@ -33,7 +33,7 @@ object CirceEncodingExercises {
     * Hint: use the methods explored above to convert the List[String] to List[Json].
     */
   def writeJsonArray(values: List[String]): String =
-    Json.fromValues(values.map(value => value.asJson)).noSpaces
+    Json.fromValues(values.map(Json.fromString)).noSpaces
 
   /** Exercise 4
     * Encode our first object
@@ -43,13 +43,12 @@ object CirceEncodingExercises {
     */
   case class Agent(surname: String, firstNames: List[String], principal: Boolean, agentId: Option[String] = None)
 
-  def writeAgent(agent: Agent): String = {
-    Json.obj(
-      ("surname",    agent.surname.asJson),
-      ("firstNames", agent.firstNames.asJson),
-      ("principal",  agent.principal.asJson)
-      ).noSpaces
-  }
+  def writeAgent(agent: Agent): String = Json.obj(
+    "surname" ->    Json.fromString(agent.surname),
+    "firstNames" -> Json.fromValues(agent.firstNames.map(Json.fromString)),
+    "principal" ->  Json.fromBoolean(agent.principal)
+  ).noSpaces
+
 
   /** Introducing Encoders
     * This is getting a bit tedious.  Wouldn't it be nice if it could work out how to encode the field
